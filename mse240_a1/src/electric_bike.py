@@ -74,3 +74,19 @@ class ElectricBike:
             0.0 <= discount_percent < 1.0
         ):
             raise ValueError("discount_percent must be in [0.0, 1.0)")
+
+        self._name: str = name.strip()
+        self.price: float = float(price)
+        self._stock: int = stock
+        self._weight_kg: float = float(weight_kg)
+        self._available_colors: List[str] = list(
+            available_colors or ["black", "silver", "red"]
+        )
+        self._features: Dict[str, bool] = dict(
+            features or {"has_rack": True, "has_lights": True, "has_fenders": False}
+        )
+        self._battery_wh: int = battery_wh
+        self._assist_level: int = assist_level
+        self._discount_percent: float = float(discount_percent)
+
+        # selected_color defaults to first available if not provided
