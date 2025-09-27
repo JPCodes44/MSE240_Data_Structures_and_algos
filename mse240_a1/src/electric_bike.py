@@ -90,3 +90,8 @@ class ElectricBike:
         self._discount_percent: float = float(discount_percent)
 
         # selected_color defaults to first available if not provided
+        if selected_color is None:
+            self._selected_color: str = self._available_colors[0]
+        else:
+            if selected_color not in self._available_colors:
+                self._selected_color = selected_color
