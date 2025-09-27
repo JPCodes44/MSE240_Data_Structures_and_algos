@@ -19,9 +19,7 @@ Output:
 """
 
 from __future__ import annotations
-
 from typing import Dict, List
-import sys
 
 
 class ElectricBike:
@@ -99,7 +97,7 @@ class ElectricBike:
         # Active is derived from the stock initially
         self._is_active: bool = self._stock > 0
 
-    # --- Required accessors ---
+    # -- Getter functions --
     def get_name(self) -> str:
         return ""
 
@@ -107,31 +105,9 @@ class ElectricBike:
         """Base price before any discount."""
         return 0.0
 
-    # --- Additional accessors/mutators ---
-    def set_price(self, price: float) -> None:
-        return None
-
     def get_current_price(self) -> float:
         """Computed price after discount, rounded to cents."""
         return 0.0
-
-    def set_discount_percent(self, pct: float) -> None:
-        return None
-
-    def is_on_sale(self) -> bool:
-        return False
-
-    def get_stock(self) -> int:
-        return 0
-
-    def set_stock(self, qty: int) -> None:
-        return None
-
-    def is_active(self) -> bool:
-        return False
-
-    def set_active(self, active: bool) -> None:
-        return None
 
     def get_weight_kg(self) -> float:
         return 0.0
@@ -139,43 +115,66 @@ class ElectricBike:
     def get_weight_lb(self) -> float:
         return 0.0
 
-    from typing import List, Dict  # make sure these are imported at top
+    def get_stock(self) -> int:
+        return 0
 
     def get_available_colors(self) -> List[str]:
         return []
 
+    def get_features(self) -> Dict[str, bool]:
+        return {}
+
+    def get_selected_color(self) -> str:
+        return ""
+
+    def get_battery_wh(self) -> int:
+        return 0
+
+    def get_assist_level(self) -> int:
+        return 0
+
+    def get_estimated_range_km(self, rider_weight_kg: float = 75.0) -> float:
+        return 0.0
+
+    # -- Setter functions --
+    def set_price(self, price: float) -> None:
+        return None
+
+    def set_discount_percent(self, pct: float) -> None:
+        return None
+
+    def set_stock(self, qty: int) -> None:
+        return None
+
+    def set_active(self, active: bool) -> None:
+        return None
+
+    def set_selected_color(self, color: str) -> None:
+        return None
+
+    def set_feature(self, feature: str, enabled: bool) -> None:
+        return None
+
+    def set_battery_wh(self, wh: int) -> None:
+        return None
+
+    def set_assist_level(self, level: int) -> None:
+        return None
+
+    # -- Checker flag functions --
+    def is_on_sale(self) -> bool:
+        return False
+
+    def is_active(self) -> bool:
+        return False
+
+    # -- Mutator functions --
     def add_color(self, color: str) -> None:
         return None
 
     def remove_color(self, color: str) -> None:
         return None
 
-    def get_selected_color(self) -> str:
-        return ""
-
-    def set_selected_color(self, color: str) -> None:
-        return None
-
-    def get_features(self) -> Dict[str, bool]:
-        return {}
-
-    def set_feature(self, feature: str, enabled: bool) -> None:
-        return None
-
-    def get_battery_wh(self) -> int:
-        return 0
-
-    def set_battery_wh(self, wh: int) -> None:
-        return None
-
-    def get_assist_level(self) -> int:
-        return 0
-
-    def set_assist_level(self, level: int) -> None:
-        return None
-
-    def get_estimated_range_km(self, rider_weight_kg: float = 75.0) -> float:
-        return 0.0
-
+    # -- Status functions --
     def __sizeof__(self) -> int:
         return 0
