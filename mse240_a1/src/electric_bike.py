@@ -25,20 +25,36 @@ import sys
 
 
 class ElectricBike:
-    """
-    ElectricBike item suitable for an online store cart/catalog.
+  """
+  ElectricBike item suitable for an online store cart/catalog.
 
-    Invariants:
-        - _name is non-empty string
-        - _price >= 0.0
-        - _stock >= 0
-        - 0.0 <= _discount_percent < 1.0
-        - _assist_level in [1..5]
-        - _selected_color in _available_colors
-        - _battery_wh > 0
-        - _weight_kg > 0
+  Invariants:
+      - _name is non-empty string
+      - _price >= 0.0
+      - _stock >= 0
+      - 0.0 <= _discount_percent < 1.0
+      - _assist_level in [1..5]
+      - _selected_color in _available_colors
+      - _battery_wh > 0
+      - _weight_kg > 0
 
-      Mutually dependent attributes:
-          - _stock (int) and _is_active (bool): stock == 0 forces is_active False.
-          - _discount_percent (float) influences computed current price.
-    """
+    Mutually dependent attributes:
+        - _stock (int) and _is_active (bool): stock == 0 forces is_active False.
+        - _discount_percent (float) influences computed current price.
+  """
+  
+  def __init_(
+    self, 
+    name: str, 
+    price: float, 
+    *, 
+    stock: int = 0, 
+    weight_kg: float = 22.5, 
+    available_colors: List[str] | None = None,
+    selected_color: str | None = None,
+    features: Dict[str, bool] | None = None,
+    battery_wh: int = 450,
+    assist_level: int = 3,
+    discount_percent: float = 0.0,
+  ) -> None:
+    
