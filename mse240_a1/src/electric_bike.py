@@ -7,7 +7,7 @@ Date: 2025-09-27
 
 Description:
   Represents an electric bicycle being sold in an online store. Satisfies assignment
-  constraints: string name, floar price, boolean(s), integer(s), list/dict attrivutes,
+  constraints: string name, float price, boolean(s), integer(s), list/dict attributes,
   mutually dependent attributes (stock <-> is_active, discount_percent -> current price),
   calculated accessors (weight in lb; estimated range), default values, and appropriate errors.
 
@@ -95,3 +95,6 @@ class ElectricBike:
         else:
             if selected_color not in self._available_colors:
                 self._selected_color = selected_color
+
+        # Active is derived from the stock initially
+        self._is_active: bool = self._stock > 0
