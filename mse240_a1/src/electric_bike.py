@@ -135,8 +135,6 @@ class ElectricBike:
         if self._stock == 0:
             self._is_active = False
         else:
-            # If stock was replenished and was previously inactive *only due to stock*,
-            # default to making it active again.
             self._is_active = True
 
     def is_active(self) -> bool:
@@ -156,7 +154,7 @@ class ElectricBike:
         return round(self._weight_kg * 2.2046226218, 3)
 
     def get_available_colors(self) -> List[str]:
-        return list(self._available_colors)  # defensive copy
+        return list(self._available_colors)
 
     def add_color(self, color: str) -> None:
         if not isinstance(color, str) or not color.strip():
@@ -181,7 +179,7 @@ class ElectricBike:
         self._selected_color = color
 
     def get_features(self) -> Dict[str, bool]:
-        return dict(self._features)  # defensive copy
+        return dict(self._features)
 
     def set_feature(self, feature: str, enabled: bool) -> None:
         if not isinstance(feature, str) or not feature.strip():
@@ -221,7 +219,6 @@ class ElectricBike:
         eff = base_eff_km_per_Wh * assist_factor * weight_factor
         return round(self._battery_wh * eff, 2)
 
-    # --- Size accounting (empirical) ---
     def __sizeof__(self) -> int:
         """Return an approximate size based on members. For empirical comparisons."""
         total = sys.getsizeof(self.__dict__)
