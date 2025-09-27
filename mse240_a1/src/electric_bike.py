@@ -43,7 +43,7 @@ class ElectricBike:
           - _discount_percent (float) influences computed current price.
     """
 
-    def __init_(
+    def __init__(
         self,
         name: str,
         price: float,
@@ -101,136 +101,81 @@ class ElectricBike:
 
     # --- Required accessors ---
     def get_name(self) -> str:
-        return self._name
+        return ""
 
     def get_price(self) -> float:
         """Base price before any discount."""
-        return self._price
+        return 0.0
 
     # --- Additional accessors/mutators ---
     def set_price(self, price: float) -> None:
-        if not isinstance(price, (int, float)) or price < 0:
-            raise ValueError("price must be a non-negative number")
-        self._price = float(price)
+        return None
 
     def get_current_price(self) -> float:
         """Computed price after discount, rounded to cents."""
-        return round(self._price * (1.0 - self._discount_percent), 2)
+        return 0.0
 
     def set_discount_percent(self, pct: float) -> None:
-        if not isinstance(pct, (int, float)) or not (0.0 <= pct < 1.0):
-            raise ValueError("discount_percent must be in [0.0, 1.0)")
-        self._discount_percent = float(pct)
+        return None
 
     def is_on_sale(self) -> bool:
-        return self._discount_percent > 0.0
+        return False
 
     def get_stock(self) -> int:
-        return self._stock
+        return 0
 
     def set_stock(self, qty: int) -> None:
-        if not isinstance(qty, int) or qty < 0:
-            raise ValueError("stock must be a non-negative int")
-        self._stock = qty
-        if self._stock == 0:
-            self._is_active = False
-        else:
-            self._is_active = True
+        return None
 
     def is_active(self) -> bool:
-        return self._is_active
+        return False
 
     def set_active(self, active: bool) -> None:
-        if not isinstance(active, bool):
-            raise TypeError("active must be a bool")
-        if active and self._stock == 0:
-            raise ValueError("cannot activate item with zero stock")
-        self._is_active = active
+        return None
 
     def get_weight_kg(self) -> float:
-        return self._weight_kg
+        return 0.0
 
     def get_weight_lb(self) -> float:
-        return round(self._weight_kg * 2.2046226218, 3)
+        return 0.0
+
+    from typing import List, Dict  # make sure these are imported at top
 
     def get_available_colors(self) -> List[str]:
-        return list(self._available_colors)
+        return []
 
     def add_color(self, color: str) -> None:
-        if not isinstance(color, str) or not color.strip():
-            raise TypeError("color must be a non-empty string")
-        if color in self._available_colors:
-            return
-        self._available_colors.append(color)
+        return None
 
     def remove_color(self, color: str) -> None:
-        if color not in self._available_colors:
-            raise ValueError("color not in available_colors")
-        if color == self._selected_color:
-            raise ValueError("cannot remove the currently selected color")
-        self._available_colors.remove(color)
+        return None
 
     def get_selected_color(self) -> str:
-        return self._selected_color
+        return ""
 
     def set_selected_color(self, color: str) -> None:
-        if color not in self._available_colors:
-            raise ValueError("selected_color must exist in available_colors")
-        self._selected_color = color
+        return None
 
     def get_features(self) -> Dict[str, bool]:
-        return dict(self._features)
+        return {}
 
     def set_feature(self, feature: str, enabled: bool) -> None:
-        if not isinstance(feature, str) or not feature.strip():
-            raise TypeError("feature must be a non-empty string")
-        if not isinstance(enabled, bool):
-            raise TypeError("enabled must be bool")
-        self._features[feature] = enabled
+        return None
 
     def get_battery_wh(self) -> int:
-        return self._battery_wh
+        return 0
 
     def set_battery_wh(self, wh: int) -> None:
-        if not isinstance(wh, int) or wh <= 0:
-            raise ValueError("battery_wh must be a positive int")
-        self._battery_wh = wh
+        return None
 
     def get_assist_level(self) -> int:
-        return self._assist_level
+        return 0
 
     def set_assist_level(self, level: int) -> None:
-        if not isinstance(level, int) or not (1 <= level <= 5):
-            raise ValueError("assist_level must be an int in [1..5]")
-        self._assist_level = level
+        return None
 
     def get_estimated_range_km(self, rider_weight_kg: float = 75.0) -> float:
-        """Very rough range estimate.
-
-        Model: base_efficiency = 0.16 km/Wh at assist level 3 and rider 75 kg.
-        Efficiency scales inversely with assist level and rider weight.
-        This is for demonstration/testing only.
-        """
-        if not isinstance(rider_weight_kg, (int, float)) or rider_weight_kg <= 0:
-            raise ValueError("rider_weight_kg must be positive")
-        base_eff_km_per_Wh = 0.16
-        assist_factor = 3.0 / self._assist_level
-        weight_factor = 75.0 / float(rider_weight_kg)
-        eff = base_eff_km_per_Wh * assist_factor * weight_factor
-        return round(self._battery_wh * eff, 2)
+        return 0.0
 
     def __sizeof__(self) -> int:
-        """Return an approximate size based on members. For empirical comparisons."""
-        total = sys.getsizeof(self.__dict__)
-        for v in self.__dict__.values():
-            try:
-                total += sys.getsizeof(v)
-            except Exception:
-                pass
-            if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    total += sys.getsizeof(k2) + sys.getsizeof(v2)
-            elif isinstance(v, (list, tuple, set)):
-                for it in v:
-                    total += sys.getsizeof(it)
-        return total
+        return 0
