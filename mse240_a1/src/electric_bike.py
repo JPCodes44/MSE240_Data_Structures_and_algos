@@ -20,6 +20,7 @@ Output:
 
 from __future__ import annotations
 from typing import Dict, List
+import sys
 
 
 class ElectricBike:
@@ -74,7 +75,7 @@ class ElectricBike:
             raise ValueError("discount_percent must be in [0.0, 1.0)")
 
         self._name: str = name.strip()
-        self.price: float = float(price)
+        self._price: float = float(price)
         self._stock: int = stock
         self._weight_kg: float = float(weight_kg)
         self._available_colors: List[str] = list(
@@ -177,4 +178,35 @@ class ElectricBike:
 
     # -- Status functions --
     def __sizeof__(self) -> int:
-        return 0
+        import sys
+
+        # start with the shallow size of the instance itself (avoid recursion)
+        total = object.__sizeof__(self)
+
+        # include the attribute dict (shallow)
+        d = getattr(self, "__dict__", None)
+        if d is not None:
+            total += sys.getsizeof(d)
+
+        # scalars/strings
+        total += sys.getsizeof(self._name)
+        total += sys.getsizeof(self._price)
+        total += sys.getsizeof(self._stock)
+        total += sys.getsizeof(self._is_active)
+        total += sys.getsizeof(self._weight_kg)
+        total += sys.getsizeof(self._battery_wh)
+        total += sys.getsizeof(self._assist_level)
+        total += sys.getsizeof(self._discount_percent)
+        total += sys.getsizeof(self._selected_color)
+
+        # list of colors: list shell + each string
+        total += sys.getsizeof(self._available_colors)
+        for c in self._available_colors:
+            total += sys.getsizeof(c)
+
+        # features dict: dict shell + each key and value
+        total += sys.getsizeof(self._features)
+        for k, v in self._features.items():
+            total += sys.getsizeof(k) + sys.getsizeof(v)
+
+        return total
