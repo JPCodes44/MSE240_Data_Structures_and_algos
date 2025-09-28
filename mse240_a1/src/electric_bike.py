@@ -93,88 +93,139 @@ class ElectricBike:
             self._selected_color: str = self._available_colors[0]
         else:
             if selected_color not in self._available_colors:
-                self._selected_color = selected_color
+                raise ValueError("selected_color must exist in available_colors")
+            self._selected_color = selected_color
 
         # Active is derived from the stock initially
         self._is_active: bool = self._stock > 0
 
     # -- Getter functions --
     def get_name(self) -> str:
-        return ""
+        return self._name
 
     def get_price(self) -> float:
         """Base price before any discount."""
-        return 0.0
+        return self._price
 
     def get_current_price(self) -> float:
         """Computed price after discount, rounded to cents."""
-        return 0.0
+        return round(self._price - (self._price * self._discount_percent), 2)
 
     def get_weight_kg(self) -> float:
-        return 0.0
+        return self._weight_kg
 
     def get_weight_lb(self) -> float:
-        return 0.0
+        KG_TO_LB = 2.20462262185
+        return self._weight_kg * KG_TO_LB
 
     def get_stock(self) -> int:
-        return 0
+        return self._stock
 
     def get_available_colors(self) -> List[str]:
-        return []
+        return self._available_colors
 
     def get_features(self) -> Dict[str, bool]:
-        return {}
+        return self._features
 
     def get_selected_color(self) -> str:
-        return ""
+        return self._selected_color
 
     def get_battery_wh(self) -> int:
-        return 0
+        return self._battery_wh
 
     def get_assist_level(self) -> int:
-        return 0
+        return self._assist_level
 
     def get_estimated_range_km(self, rider_weight_kg: float = 75.0) -> float:
-        return 0.0
+        base_eff_km_per_Wh = 0.16
+        assist_factor = 3.0 / self._assist_level
+        weight_factor = 75.0 / float(rider_weight_kg)
+        expected = round(
+            self._battery_wh * base_eff_km_per_Wh * assist_factor * weight_factor, 2
+        )
+        return expected
 
     # -- Setter functions --
     def set_price(self, price: float) -> None:
-        return None
+        if price < 0:
+            raise (ValueError("Price cannot be negative."))
+        else:
+            self._price = price
 
     def set_discount_percent(self, pct: float) -> None:
-        return None
+        if pct >= 1 or pct < 0:
+            raise (
+                ValueError(
+                    "Cannot have a negative percentage or a discount of over 100%"
+                )
+            )
+        self._discount_percent = pct
 
     def set_stock(self, qty: int) -> None:
-        return None
+        if qty < 0:
+            raise (ValueError("Stock cannot be negative."))
+        self._stock = qty
 
     def set_active(self, active: bool) -> None:
-        return None
+        if active == True and self._stock <= 0:
+            raise (ValueError("Cannot activate stock if stock is less than 0"))
+        if type(active) != bool:
+            raise (TypeError("active is not a boolean"))
+        self._is_active = active
 
     def set_selected_color(self, color: str) -> None:
-        return None
+        if color not in self._available_colors:
+            raise (ValueError("Color is not in the list of available colors"))
+        self._selected_color = color
 
     def set_feature(self, feature: str, enabled: bool) -> None:
-        return None
+        if type(feature) != str or type(enabled) != bool:
+            raise (TypeError("Wrong types for feature or enabled"))
+
+        if not feature.strip():
+            raise (TypeError("Cant be a empty string"))
+        self._features[feature] = enabled
 
     def set_battery_wh(self, wh: int) -> None:
-        return None
+        if wh <= 0:
+            raise (ValueError("wh cannot be non-positive or 0"))
+        self._battery_wh = wh
 
     def set_assist_level(self, level: int) -> None:
-        return None
+        if level <= 0 or level > 5:
+            raise (
+                ValueError(
+                    "Level cannot be non-positive or 0 or above the current assist level"
+                )
+            )
+        self._assist_level = level
 
     # -- Checker flag functions --
     def is_on_sale(self) -> bool:
-        return False
+        return self._discount_percent > 0
 
     def is_active(self) -> bool:
-        return False
+        return self._stock > 0
 
     # -- Mutator functions --
     def add_color(self, color: str) -> None:
-        return None
+        if not isinstance(color, str):
+            raise TypeError("color must be a string")
+
+        color = color.strip()
+
+        if not color:
+            raise TypeError("color must be a non-empty string")
+        elif color not in self._available_colors:
+            self._available_colors.append(color)
 
     def remove_color(self, color: str) -> None:
-        return None
+        if color not in self._available_colors:
+            raise (ValueError("Color is not in the list of available colors"))
+        elif self._selected_color == color:
+            raise (ValueError("Removed color cannot be the same as the selected color"))
+        else:
+            self._available_colors.remove(color)
 
     # -- Status functions --
     def __sizeof__(self) -> int:
