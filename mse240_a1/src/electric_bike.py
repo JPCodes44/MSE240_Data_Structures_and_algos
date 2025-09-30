@@ -189,6 +189,8 @@ class ElectricBike:
     def set_battery_wh(self, wh: int) -> None:
         if wh <= 0:
             raise (ValueError("wh cannot be non-positive or 0"))
+        if type(wh) != int:
+            raise (TypeError("wh cannot be a non-integer"))
         self._battery_wh = wh
 
     def set_assist_level(self, level: int) -> None:
@@ -198,6 +200,8 @@ class ElectricBike:
                     "Level cannot be non-positive or 0 or above the current assist level"
                 )
             )
+        if type(level) != int:
+            raise (TypeError("Level has to be an integer"))
         self._assist_level = level
 
     # -- Checker flag functions --
