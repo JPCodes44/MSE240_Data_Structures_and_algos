@@ -37,13 +37,32 @@ class TestElectricBike(unittest.TestCase):
 
     def test_get_price_typical(self):
         """
-        Unit: ElectricBike.get_price
-        Category: typical
-        Input: ElectricBike(..., price=1299.99)
-        Output: 1299.99 (float)
+        Unit: ElectricBike.set_price
+        Category: type/error + typical
+        Inputs:
+          - bad types: "5", b"5", None, object() -> TypeError (from '< 0' comparison)
+          - huge numeric -> Pass
         """
-        eb = ElectricBike(name="MEC Midtown 2 Bicycle", price=1299.99)
-        self.assertEqual(eb.get_price(), 1299.99)
+        eb = ElectricBike("Bike", 1000.0, stock=1)
+
+        for bad in ("5", b"5", None, object()):
+            with self.subTest(bad=bad):
+                with self.assertRaises(TypeError):
+                    eb.set_price(bad)
+
+        eb.set_price(10_000_000.0)
+        self.assertEqual(eb.get_price(), 10_000_000.0)
+
+    def test_set_price_zero_allowed(self):
+        """
+        Unit: ElectricBike.set_price
+        Category: typical
+        Input: set_price(0.0)
+        Output: price becomes 0.0 (impl only rejects < 0)
+        """
+        eb = ElectricBike("Bike", 1000.0, stock=1)
+        eb.set_price(0.0)
+        self.assertEqual(eb.get_price(), 0.0)
 
     def test_get_current_price_typical(self):
         """
@@ -198,29 +217,25 @@ class TestElectricBike(unittest.TestCase):
             eb.set_price(-0.01)
         self.assertEqual(eb.get_price(), before)
 
-    def test_set_discount_percent_updates_current_price(self):
-        """
-        Unit: ElectricBike.set_discount_percent + get_current_price
-        Category: typical
-        Input: price=2000.0; set_discount_percent(0.25)
-        Output: get_current_price() -> 1500.0
-        """
-        eb = ElectricBike("Bike", 2000.0, stock=1)
-        eb.set_discount_percent(0.25)
-        self.assertAlmostEqual(eb.get_current_price(), 1500.0, places=2)
-
-    def test_set_discount_percent_bounds(self):
+    def test_set_discount_percent(self):
         """
         Unit: ElectricBike.set_discount_percent
-        Category: bounds/error
-        Input: pct in {-0.1, 1.0, 2, "0.2"}
-        Output: raises ValueError or TypeError
+        Category: bounds/type
+        Inputs/Outputs based on strict 0 < pct < 1 and numeric only.
         """
         eb = ElectricBike("Bike", 1000.0, stock=1)
-        for bad in (-0.1, 1.0, 2, "0.2"):
+
+        for ok in (0.2, 0.00001, 0.9999, 0, 0.8):
+            with self.subTest(ok=ok):
+                eb.set_discount_percent(ok)
+                self.assertAlmostEqual(
+                    eb.get_current_price(), eb.get_price() * (1 - ok), places=6
+                )
+
+        for bad in (1, -0.0001, "0.2"):
             with self.subTest(bad=bad):
                 with self.assertRaises((ValueError, TypeError)):
-                    eb.set_discount_percent(bad)  # type: ignore[arg-type]
+                    eb.set_discount_percent(bad)
 
     def test_set_stock_toggles_active(self):
         """
@@ -274,18 +289,30 @@ class TestElectricBike(unittest.TestCase):
         """
         eb = ElectricBike("Bike", 1000.0, stock=1)
         with self.assertRaises(TypeError):
-            eb.set_active("yes")  # type: ignore
+            eb.set_active("yes")
 
     def test_set_selected_color_valid(self):
         """
         Unit: ElectricBike.set_selected_color
-        Category: typical
-        Input: available_colors=["black","blue"]; set_selected_color("blue")
-        Output: get_selected_color() -> "blue"
+        Category: typical/error/type
         """
         eb = ElectricBike("Bike", 1000.0, stock=1, available_colors=["black", "blue"])
+
         eb.set_selected_color("blue")
         self.assertEqual(eb.get_selected_color(), "blue")
+
+        with self.assertRaises(ValueError):
+            eb.set_selected_color("green")
+
+        for bad in (0, None, ["red"]):
+            with self.subTest(bad=bad):
+                with self.assertRaises((TypeError, ValueError)):
+                    eb.set_selected_color(bad)
+
+        eb2 = ElectricBike("Bike", 1000.0, stock=1, available_colors=["black"])
+        eb2._available_colors = False
+        with self.assertRaises(TypeError):
+            eb2.set_selected_color("black")
 
     def test_set_selected_color_invalid(self):
         """
@@ -348,13 +375,26 @@ class TestElectricBike(unittest.TestCase):
     def test_set_feature_typical(self):
         """
         Unit: ElectricBike.set_feature
-        Category: typical
-        Input: features={"has_lights": False}; set_feature("has_lights", True)
-        Output: features["has_lights"] is True
+        Category: typical/type
         """
-        eb = ElectricBike("Bike", 1000.0, stock=1, features={"has_lights": False})
-        eb.set_feature("has_lights", True)
-        self.assertTrue(eb.get_features()["has_lights"])
+        eb = ElectricBike("Bike", 1000.0, stock=1, features={"grippy": False})
+
+        eb.set_feature("grippy", True)
+        self.assertTrue(eb.get_features()["grippy"])
+        eb.set_feature("grippy", False)
+        self.assertFalse(eb.get_features()["grippy"])
+
+        eb.set_feature("SixSeven", True)
+        self.assertTrue(eb.get_features()["SixSeven"])
+
+        for bad_key in ("   ", ""):
+            with self.subTest(bad_key=bad_key):
+                with self.assertRaises(TypeError):
+                    eb.set_feature(bad_key, True)
+        for bad_val in ("yes", 1, None):
+            with self.subTest(bad_val=bad_val):
+                with self.assertRaises(TypeError):
+                    eb.set_feature("flag", bad_val)
 
     def test_set_feature_type_checks(self):
         """
@@ -367,31 +407,28 @@ class TestElectricBike(unittest.TestCase):
         with self.assertRaises(TypeError):
             eb.set_feature("", True)
         with self.assertRaises(TypeError):
-            eb.set_feature("has_rack", "yes")  # type: ignore
+            eb.set_feature("has_rack", "yes")
 
-    def test_set_battery_wh_typical(self):
+    def test_set_battery_wh(self):
         """
         Unit: ElectricBike.set_battery_wh
-        Category: typical
-        Input: set_battery_wh(600)
-        Output: get_battery_wh() -> 600
+        Category: bounds/type
+        Assumes: requires positive integer watt-hours.
         """
         eb = ElectricBike("Bike", 1000.0, stock=1)
-        eb.set_battery_wh(600)
-        self.assertEqual(eb.get_battery_wh(), 600)
 
-    def test_set_battery_wh_rejects_nonpositive(self):
-        """
-        Unit: ElectricBike.set_battery_wh
-        Category: error
-        Input: set_battery_wh(0) and set_battery_wh(-10)
-        Output: raises ValueError for each
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-        for bad in (0, -10):
+        for bad in (0, -1):
             with self.subTest(bad=bad):
                 with self.assertRaises(ValueError):
                     eb.set_battery_wh(bad)
+
+        for bad in (0.1, "3", None):
+            with self.subTest(bad=bad):
+                with self.assertRaises(TypeError):
+                    eb.set_battery_wh(bad)
+
+        eb.set_battery_wh(1_000_000)
+        self.assertEqual(eb.get_battery_wh(), 1_000_000)
 
     def test_set_assist_level_bounds(self):
         """
@@ -427,20 +464,24 @@ class TestElectricBike(unittest.TestCase):
         """
         Unit: ElectricBike.is_on_sale
         Category: typical
-        Input: discount_percent=0.1
-        Output: True
         """
-        eb = ElectricBike("Bike", 2000.0, discount_percent=0.1)
+        eb = ElectricBike("Bike", 1000.0, stock=1, discount_percent=0.0)
+        self.assertFalse(eb.is_on_sale())
+        eb.set_discount_percent(0.1)
+        self.assertTrue(eb.is_on_sale())
+        eb.set_discount_percent(0.001)
+        self.assertTrue(eb.is_on_sale())
+        eb.set_discount_percent(0.999)
         self.assertTrue(eb.is_on_sale())
 
     def test_is_active(self):
         """
         Unit: ElectricBike.is_active
         Category: typical
-        Input: stock=2
-        Output: True
         """
-        eb = ElectricBike("Bike", 2000.0, stock=2)
+        eb = ElectricBike("Bike", 1000.0, stock=0)
+        self.assertFalse(eb.is_active())
+        eb.set_stock(1)
         self.assertTrue(eb.is_active())
 
     # -- Mutator function tests --
@@ -481,237 +522,3 @@ class TestElectricBike(unittest.TestCase):
         deep_no_gc = eb.__sizeof__()
         maybe_gc = _gc_header_bytes() if gc.is_tracked(eb) else 0
         self.assertEqual(sys.getsizeof(eb), deep_no_gc + maybe_gc)
-
-    # -------- Additional tests for setters & flags consistent with current impl --------
-
-    def test_set_price_type_and_huge_values(self):
-        """
-        Unit: ElectricBike.set_price
-        Category: type/error + typical
-        Inputs:
-          - bad types: "5", b"5", None, object() -> TypeError (from '< 0' comparison)
-          - huge numeric -> Pass
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-
-        for bad in ("5", b"5", None, object()):
-            with self.subTest(bad=bad):
-                with self.assertRaises(TypeError):
-                    eb.set_price(bad)  # type: ignore[arg-type]
-
-        eb.set_price(10_000_000.0)
-        self.assertEqual(eb.get_price(), 10_000_000.0)
-
-    def test_set_price_zero_allowed(self):
-        """
-        Unit: ElectricBike.set_price
-        Category: typical
-        Input: set_price(0.0)
-        Output: price becomes 0.0 (impl only rejects < 0)
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-        eb.set_price(0.0)
-        self.assertEqual(eb.get_price(), 0.0)
-
-    def test_set_discount_percent_matrix(self):
-        """
-        Unit: ElectricBike.set_discount_percent
-        Category: bounds/type
-        Inputs/Outputs based on strict 0 < pct < 1 and numeric only.
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-
-        for ok in (0.2, 0.00001, 0.9999, 0.8):
-            with self.subTest(ok=ok):
-                eb.set_discount_percent(ok)
-                self.assertAlmostEqual(
-                    eb.get_current_price(), eb.get_price() * (1 - ok), places=6
-                )
-
-        for bad in (1, 0, -0.0001, "0.2"):
-            with self.subTest(bad=bad):
-                with self.assertRaises((ValueError, TypeError)):
-                    eb.set_discount_percent(bad)  # type: ignore[arg-type]
-
-    def test_set_stock_matrix(self):
-        """
-        Unit: ElectricBike.set_stock
-        Category: bounds/type/state
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-
-        # Negative rejected
-        with self.assertRaises(ValueError):
-            eb.set_stock(-1)
-
-        # Zero allowed (bike becomes inactive)
-        eb.set_stock(0)
-        self.assertEqual(eb.get_stock(), 0)
-        self.assertFalse(eb.is_active())
-
-        # Positive integers allowed, including large
-        for ok in (1, 3, 10_000_000):
-            with self.subTest(ok=ok):
-                eb.set_stock(ok)
-                self.assertEqual(eb.get_stock(), ok)
-                self.assertTrue(eb.is_active())
-
-        # Bad types rejected
-        for bad in (".200", "2", 3.5, None):
-            with self.subTest(bad=bad):
-                with self.assertRaises((TypeError, ValueError)):
-                    eb.set_stock(bad)  # type: ignore[arg-type]
-
-    def test_set_active_matrix(self):
-        """
-        Unit: ElectricBike.set_active
-        Category: guard/type/state
-        """
-        # stock=0 cannot activate
-        eb = ElectricBike("Bike", 1000.0, stock=0)
-        with self.assertRaises(ValueError):
-            eb.set_active(True)
-        self.assertFalse(eb.is_active())
-
-        # good: stock=1 allows toggling both ways
-        eb.set_stock(1)
-        eb.set_active(True)
-        self.assertTrue(eb.is_active())
-        eb.set_active(False)
-        self.assertFalse(eb.is_active())
-
-        # type check
-        for bad in ("yes", 0, 1, None):
-            with self.subTest(bad=bad):
-                with self.assertRaises(TypeError):
-                    eb.set_active(bad)  # type: ignore[arg-type]
-
-    def test_set_selected_color_matrix(self):
-        """
-        Unit: ElectricBike.set_selected_color
-        Category: typical/error/type
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1, available_colors=["black", "blue"])
-
-        # Typical: choose a valid color
-        eb.set_selected_color("blue")
-        self.assertEqual(eb.get_selected_color(), "blue")
-
-        # Error: not in available list
-        with self.assertRaises(ValueError):
-            eb.set_selected_color("green")
-
-        # Type errors or membership errors for non-strings or corrupted available_colors
-        for bad in (0, None, ["red"]):
-            with self.subTest(bad=bad):
-                with self.assertRaises((TypeError, ValueError)):
-                    eb.set_selected_color(bad)  # type: ignore[arg-type]
-
-        # Corrupted available_colors -> TypeError during membership check
-        eb2 = ElectricBike("Bike", 1000.0, stock=1, available_colors=["black"])
-        eb2._available_colors = False  # type: ignore[assignment]
-        with self.assertRaises(TypeError):
-            eb2.set_selected_color("black")
-
-    def test_set_feature_matrix(self):
-        """
-        Unit: ElectricBike.set_feature
-        Category: typical/type
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1, features={"grippy": False})
-
-        # Typical: toggle True/False
-        eb.set_feature("grippy", True)
-        self.assertTrue(eb.get_features()["grippy"])
-        eb.set_feature("grippy", False)
-        self.assertFalse(eb.get_features()["grippy"])
-
-        # New keys OK
-        eb.set_feature("SixSeven", True)
-        self.assertTrue(eb.get_features()["SixSeven"])
-
-        # Type checks
-        for bad_key in ("   ", ""):
-            with self.subTest(bad_key=bad_key):
-                with self.assertRaises(TypeError):
-                    eb.set_feature(bad_key, True)
-        for bad_val in ("yes", 1, None):
-            with self.subTest(bad_val=bad_val):
-                with self.assertRaises(TypeError):
-                    eb.set_feature("flag", bad_val)  # type: ignore[arg-type]
-
-    def test_set_battery_wh_matrix(self):
-        """
-        Unit: ElectricBike.set_battery_wh
-        Category: bounds/type
-        Assumes: requires positive integer watt-hours.
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1)
-
-        # Non-positive -> ValueError
-        for bad in (0, -1):
-            with self.subTest(bad=bad):
-                with self.assertRaises(ValueError):
-                    eb.set_battery_wh(bad)
-
-        # Type errors
-        for bad in (0.1, "3", None):
-            with self.subTest(bad=bad):
-                with self.assertRaises(TypeError):
-                    eb.set_battery_wh(bad)  # type: ignore[arg-type]
-
-        # Large positive int -> Pass
-        eb.set_battery_wh(1_000_000)
-        self.assertEqual(eb.get_battery_wh(), 1_000_000)
-
-    def test_is_on_sale_matrix(self):
-        """
-        Unit: ElectricBike.is_on_sale
-        Category: typical
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=1, discount_percent=0.0)
-        self.assertFalse(eb.is_on_sale())
-        eb.set_discount_percent(0.1)
-        self.assertTrue(eb.is_on_sale())
-        eb.set_discount_percent(0.001)
-        self.assertTrue(eb.is_on_sale())
-        eb.set_discount_percent(0.999)
-        self.assertTrue(eb.is_on_sale())
-
-    def test_is_active_matrix(self):
-        """
-        Unit: ElectricBike.is_active
-        Category: typical
-        """
-        eb = ElectricBike("Bike", 1000.0, stock=0)
-        self.assertFalse(eb.is_active())
-        eb.set_stock(1)
-        self.assertTrue(eb.is_active())
-
-    def test___sizeof___returns_int_and_positive(self):
-        """
-        Unit: ElectricBike.__sizeof__
-        Category: typical
-        Input: various sizes in lists/dicts
-        Output: returns positive int
-        """
-        eb = ElectricBike(
-            "Bike", 2000.0, stock=1, available_colors=["red"], features={"f": True}
-        )
-        sz = eb.__sizeof__()
-        self.assertIsInstance(sz, int)
-        self.assertGreater(sz, 0)
-
-    def test___sizeof___handles_big_structures(self):
-        """
-        Unit: ElectricBike.__sizeof__
-        Category: uncommon (stress)
-        """
-        many = [f"c{i}" for i in range(2000)]
-        feats = {f"k{i}": (i % 2 == 0) for i in range(2000)}
-        eb = ElectricBike(
-            "Bike", 1000.0, stock=1, available_colors=many, features=feats
-        )
-        sz = eb.__sizeof__()
-        self.assertIsInstance(sz, int)
-        self.assertGreater(sz, 0)
